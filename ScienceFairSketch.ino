@@ -79,15 +79,14 @@
       Wire.beginTransmission(MPU_addr);
       Wire.write(0x3B);  
       Wire.endTransmission(false);
-      Wire.requestFrom(MPU_addr,14,true);  
-
-
+      Wire.requestFrom(MPU_addr,14,true); 
+      
       if(calibrating) {
         double baseX = Wire.read()<<8|Wire.read();
         double baseY = Wire.read()<<8|Wire.read();
         double baseZ = Wire.read()<<8|Wire.read();
         int counter = 2;
-        while(millis() - clocktime < 10000) {
+        while(millis() < 10000) {
           //trying not to create too many variables just in case, even though doubles are pretty small compared to strings
           baseX = (baseX*(counter-1) + (double)(Wire.read()<<8|Wire.read()))/counter;//weighted average
           baseY = (baseY*(counter-1) + (double)(Wire.read()<<8|Wire.read()))/counter;
@@ -109,7 +108,10 @@
       AcY=Wire.read()<<8|Wire.read();  
       AcZ=Wire.read()<<8|Wire.read();  //these arent converted to g's.
       
-      AC = sqrt((AcX/16384)*(AcX/16384) + (AcY/16384)*(AcY/16384) + (AcZ/16384)*(AcZ/16384) - 9.8*9.8);
+      AC = sqrt((AcX/16384)*(AcX/16384) + (AcY/16384)*(AcY/16384) + (AcZ/16384)*(AcZ/16384)); //could add a "-1" to it to remove the base 9.8 m/s or 1g but its included for demonstration. Can be removed, might be conducive to simulation although that would depend on axes' individual accelerations too.
+
+      Serial.println(AC);
+      
       if(oldVal + jitter <= AC || oldVal-jitter >= AC) {
         clocktime = millis(); //gotta update the time!
         myFile.print(F("Acceleration = ")); myFile.print(AC); myFile.print(F("g; ACx = ")); myFile.print(AcX); myFile.print(F(", ACy = ")); myFile.print(AcY); myFile.print(F(", ACz = ")); myFile.print(AcZ); myFile.println(F("; ")); myFile.println("at " + (String)clocktime + " ms.");
